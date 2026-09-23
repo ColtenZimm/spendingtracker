@@ -1,174 +1,374 @@
-:root {
-  --paper: #e9ebe4;
-  --card: #ffffff;
-  --ink: #1c1f1b;
-  --ink-soft: #5c6259;
-  --accent: #1f6f54;
-  --danger: #b5453a;
-  --border: #d8dacf;
+/* ============================================================
+   EXPENSE LEDGER — blue / white / black theme
+   Light by default, switches to dark with the system setting.
+   ============================================================ */
 
-  --c-food: #c97b3e;
-  --c-transport: #3e7cc9;
-  --c-housing: #7b5ea7;
-  --c-entertainment: #c93e6b;
-  --c-utilities: #a39a3e;
-  --c-other: #6b7280;
+:root {
+  /* Surfaces */
+  --bg: #eef2f9;
+  --bg-glow: rgba(37, 99, 235, 0.14);
+  --card: #ffffff;
+  --field: #f5f7fb;
+  --border: #dde3ee;
+
+  /* Text */
+  --ink: #0b0f19;
+  --ink-soft: #5b6477;
+  --ink-faint: #98a1b3;
+
+  /* Blue accent */
+  --blue: #2563eb;
+  --blue-hover: #1d4ed8;
+  --blue-soft: rgba(37, 99, 235, 0.1);
+  --blue-ring: rgba(37, 99, 235, 0.28);
+
+  --danger: #e11d48;
+
+  /* Total panel — black in light mode */
+  --panel: #0b0f19;
+  --panel-ink: #ffffff;
+  --panel-soft: #8f9bb3;
+
+  /* Category colors — kept in the blue family, plus neutrals */
+  --c-food: #2563eb;
+  --c-transport: #0ea5e9;
+  --c-housing: #1e3a8a;
+  --c-entertainment: #6366f1;
+  --c-utilities: #94a3b8;
+  --c-other: #0b0f19;
+
+  --shadow:
+    0 1px 2px rgba(11, 15, 25, 0.04),
+    0 12px 32px -8px rgba(11, 15, 25, 0.12);
+
+  --radius: 20px;
+  --radius-sm: 12px;
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
 
   --font-sans: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+
+  color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --paper: #14161a;
-    --card: #1d2024;
-    --ink: #edefea;
-    --ink-soft: #9ba39a;
-    --border: #33373d;
+    --bg: #05070c;
+    --bg-glow: rgba(59, 130, 246, 0.18);
+    --card: #0e121b;
+    --field: #151a25;
+    --border: #222939;
+
+    --ink: #f3f6fc;
+    --ink-soft: #97a1b5;
+    --ink-faint: #5d6679;
+
+    --blue: #3b82f6;
+    --blue-hover: #60a5fa;
+    --blue-soft: rgba(59, 130, 246, 0.14);
+    --blue-ring: rgba(59, 130, 246, 0.35);
+
+    --danger: #fb7185;
+
+    /* Total panel — blue in dark mode, so it still stands out */
+    --panel: linear-gradient(135deg, #1d4ed8, #2563eb 60%, #3b82f6);
+    --panel-ink: #ffffff;
+    --panel-soft: rgba(255, 255, 255, 0.7);
+
+    --c-housing: #93c5fd;
+    --c-other: #e5e7eb;
+
+    --shadow:
+      0 1px 0 rgba(255, 255, 255, 0.03) inset,
+      0 24px 48px -12px rgba(0, 0, 0, 0.6);
+
+    color-scheme: dark;
   }
 }
 
+/* ---- Base ---- */
+
 * { box-sizing: border-box; }
+
+::selection { background: var(--blue); color: #fff; }
 
 body {
   margin: 0;
   min-height: 100vh;
-  background: var(--paper);
+  background:
+    radial-gradient(900px 500px at 50% -10%, var(--bg-glow), transparent 70%),
+    var(--bg);
+  background-attachment: fixed;
   color: var(--ink);
   font-family: var(--font-sans);
   display: flex;
   justify-content: center;
-  padding: 48px 16px 80px;
+  padding: 56px 16px 80px;
+  -webkit-font-smoothing: antialiased;
 }
 
 .wrap {
   width: 100%;
-  max-width: 420px;
+  max-width: 460px;
 }
+
+/* ---- Card ---- */
 
 .receipt {
   position: relative;
   background: var(--card);
-  border-radius: 4px;
-  padding: 28px 24px 20px;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.08);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px 24px 24px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  animation: rise 0.5s var(--ease) both;
 }
 
-.receipt::after {
+/* Thin blue accent line across the top of the card */
+.receipt::before {
   content: '';
   position: absolute;
-  left: 0; right: 0; bottom: -10px;
-  height: 20px;
-  background:
-    linear-gradient(-45deg, var(--card) 10px, transparent 0) 0 10px,
-    linear-gradient(45deg, var(--card) 10px, transparent 0) 0 10px;
-  background-size: 20px 20px;
-  background-repeat: repeat-x;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--blue), #60a5fa, var(--blue));
 }
+
+/* ---- Header ---- */
 
 .head h1 {
   margin: 0;
-  font-size: 22px;
+  font-size: 26px;
   font-weight: 700;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.03em;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Small blue square before the title */
+.head h1::before {
+  content: '';
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  background: var(--blue);
+  box-shadow: 0 0 0 4px var(--blue-soft);
 }
 
 .head .sub {
-  margin: 4px 0 20px;
+  margin: 6px 0 24px;
   font-size: 12px;
-  color: var(--ink-soft);
+  font-family: var(--font-mono);
+  color: var(--ink-faint);
+  letter-spacing: 0.02em;
 }
 
-.form { margin-bottom: 18px; }
+/* ---- Form ---- */
+
+.form { margin-bottom: 20px; }
 
 .form input,
 .form select {
   font-family: var(--font-sans);
-  font-size: 14px;
+  font-size: 15px;
   color: var(--ink);
-  background: var(--paper);
+  background: var(--field);
   border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  outline: none;
+  transition:
+    border-color 0.2s var(--ease),
+    box-shadow 0.2s var(--ease),
+    background-color 0.2s var(--ease);
 }
 
-#description { width: 100%; margin-bottom: 8px; }
+.form input::placeholder { color: var(--ink-faint); }
+
+.form input:hover,
+.form select:hover { border-color: var(--ink-faint); }
+
+.form input:focus,
+.form select:focus {
+  border-color: var(--blue);
+  background: var(--card);
+  box-shadow: 0 0 0 4px var(--blue-ring);
+}
+
+#description { width: 100%; margin-bottom: 10px; }
 
 .form-row {
   display: flex;
-  gap: 8px;
+  gap: 10px;
 }
 
 #amount {
-  width: 90px;
+  width: 110px;
   font-family: var(--font-mono);
+  -moz-appearance: textfield;
+  appearance: textfield;
 }
 
-#category { flex: 1; min-width: 0; }
+/* Hide the number spinner arrows */
+#amount::-webkit-outer-spin-button,
+#amount::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+#category {
+  flex: 1;
+  min-width: 0;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 36px;
+  /* Custom blue chevron */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%233b82f6' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+}
 
 .add-btn {
   font-family: var(--font-sans);
   font-weight: 600;
-  font-size: 14px;
-  color: #797979;
-  background: var(--accent);
+  font-size: 15px;
+  color: #fff;
+  background: var(--blue);
   border: none;
-  border-radius: 6px;
-  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  padding: 12px 22px;
   cursor: pointer;
+  box-shadow: 0 6px 16px -6px var(--blue);
+  transition:
+    background-color 0.2s var(--ease),
+    transform 0.15s var(--ease),
+    box-shadow 0.2s var(--ease);
 }
 
-.add-btn:hover { opacity: 0.1; }
+.add-btn:hover {
+  background: var(--blue-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px -8px var(--blue);
+}
+
+.add-btn:active {
+  transform: translateY(1px) scale(0.98);
+  box-shadow: 0 2px 8px -4px var(--blue);
+}
+
+.add-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px var(--blue-ring);
+}
+
+/* ---- Filter chips ---- */
 
 .filter-bar {
   display: flex;
   gap: 6px;
   overflow-x: auto;
-  padding-bottom: 4px;
-  margin-bottom: 8px;
+  padding: 2px 2px 8px;
+  margin: 0 -2px 6px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
 }
 
 .chip {
   flex: 0 0 auto;
   font-family: var(--font-sans);
-  font-size: 12px;
+  font-size: 13px;
+  font-weight: 500;
   color: var(--ink-soft);
   background: transparent;
   border: 1px solid var(--border);
   border-radius: 999px;
-  padding: 5px 12px;
+  padding: 6px 14px;
   cursor: pointer;
   white-space: nowrap;
+  transition:
+    color 0.2s var(--ease),
+    background-color 0.2s var(--ease),
+    border-color 0.2s var(--ease),
+    transform 0.15s var(--ease);
+}
+
+.chip:hover {
+  color: var(--blue);
+  border-color: var(--blue);
+  background: var(--blue-soft);
+}
+
+.chip:active { transform: scale(0.95); }
+
+.chip:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--blue-ring);
 }
 
 .chip.active {
   color: #fff;
-  background: var(--ink);
-  border-color: var(--ink);
+  background: var(--blue);
+  border-color: var(--blue);
+  box-shadow: 0 4px 12px -4px var(--blue);
 }
+
+/* ---- Expense list ---- */
 
 .list {
   list-style: none;
-  margin: 8px 0 0;
+  margin: 4px 0 0;
   padding: 0;
 }
 
 .row {
   display: flex;
-  align-items: baseline;
-  gap: 8px;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--border);
+  align-items: center;
+  gap: 10px;
+  padding: 12px 10px;
+  margin: 0 -10px;
+  border-radius: var(--radius-sm);
+  transition: background-color 0.2s var(--ease);
+  animation: row-in 0.35s var(--ease) both;
 }
 
+/* Stagger the first few rows so the list cascades in */
+.row:nth-child(2) { animation-delay: 0.03s; }
+.row:nth-child(3) { animation-delay: 0.06s; }
+.row:nth-child(4) { animation-delay: 0.09s; }
+.row:nth-child(5) { animation-delay: 0.12s; }
+.row:nth-child(n + 6) { animation-delay: 0.15s; }
+
+/* Hairline divider between rows — hidden around the hovered row */
+.row { position: relative; }
+
+.row + .row::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 10px;
+  right: 10px;
+  height: 1px;
+  background: var(--border);
+  transition: opacity 0.2s var(--ease);
+}
+
+.row:hover { background: var(--blue-soft); }
+.row:hover::before,
+.row:hover + .row::before { opacity: 0; }
+
 .dot {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   flex: 0 0 auto;
-  transform: translateY(-1px);
   background: var(--c-other);
+  box-shadow: 0 0 0 3px var(--card);
+  transition: transform 0.2s var(--ease);
 }
+
+.row:hover .dot { transform: scale(1.25); }
 
 .cat-Food .dot { background: var(--c-food); }
 .cat-Transport .dot { background: var(--c-transport); }
@@ -181,62 +381,114 @@ body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 45%;
-  font-size: 14px;
+  max-width: 55%;
+  font-size: 15px;
+  font-weight: 500;
 }
 
 .leader {
   flex: 1;
-  border-bottom: 2px dotted var(--border);
-  transform: translateY(-4px);
-  margin: 0 2px;
+  height: 1px;
+  background-image: linear-gradient(90deg, var(--border) 50%, transparent 0);
+  background-size: 6px 1px;
+  margin: 0 4px;
+  opacity: 0.9;
 }
 
 .amount {
   font-family: var(--font-mono);
   font-size: 14px;
+  font-weight: 600;
   white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
 .delete-btn {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
   font-family: var(--font-sans);
-  font-size: 16px;
+  font-size: 18px;
   line-height: 1;
-  color: var(--ink-soft);
+  color: var(--ink-faint);
   background: none;
   border: none;
+  border-radius: 8px;
   cursor: pointer;
-  padding: 2px 4px;
+  opacity: 0.45;
+  transition:
+    opacity 0.2s var(--ease),
+    color 0.2s var(--ease),
+    background-color 0.2s var(--ease),
+    transform 0.15s var(--ease);
 }
 
-.delete-btn:hover { color: var(--danger); }
+.row:hover .delete-btn,
+.delete-btn:focus-visible { opacity: 1; }
+
+.delete-btn:hover {
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
+}
+
+.delete-btn:active { transform: scale(0.9); }
+
+.delete-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--blue-ring);
+}
+
+/* Touch screens have no hover — always show the delete button */
+@media (hover: none) {
+  .delete-btn { opacity: 1; }
+}
 
 .empty {
-  font-size: 13px;
-  color: var(--ink-soft);
+  font-size: 14px;
+  color: var(--ink-faint);
   text-align: center;
-  padding: 24px 0;
+  padding: 32px 0;
+  margin: 8px 0 0;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
 }
+
+/* ---- Total ---- */
 
 .total-row {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 2px double var(--ink);
-  font-weight: 700;
+  align-items: center;
+  margin-top: 18px;
+  padding: 18px 20px;
+  border-radius: 16px;
+  background: var(--panel);
+  color: var(--panel-ink);
+}
+
+.total-row > span:first-child {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--panel-soft);
 }
 
 .total-amount {
   font-family: var(--font-mono);
-  font-size: 18px;
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
 }
 
+/* ---- Footer hint ---- */
+
 .hint {
-  margin-top: 20px;
+  margin-top: 22px;
   font-size: 12px;
-  color: var(--ink-soft);
+  color: var(--ink-faint);
   text-align: center;
 }
 
@@ -244,6 +496,45 @@ body {
   font-family: var(--font-mono);
   background: var(--card);
   border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 1px 5px;
+  border-radius: 6px;
+  padding: 2px 6px;
+}
+
+/* ---- Animations ---- */
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes row-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ---- Small screens ---- */
+
+@media (max-width: 400px) {
+  body { padding-top: 24px; }
+
+  .receipt { padding: 24px 18px 18px; }
+
+  .head h1 { font-size: 22px; }
+
+  /* Stack the form: amount + category on one line, full-width button below */
+  .form-row { flex-wrap: wrap; }
+  #amount { flex: 0 0 40%; width: auto; min-width: 0; }
+  #category { flex: 1 1 0; }
+  .add-btn { flex: 1 1 100%; }
+
+  .total-amount { font-size: 20px; }
 }
