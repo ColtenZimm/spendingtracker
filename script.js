@@ -15,7 +15,14 @@
   ];
   let nextId = 4;
   let activeCategory = 'All';
-
+  function loadExpensesFromLocalStorage() {
+    const expensesJSON = localStorage.getItem('expenses');
+    if (expensesJSON) {
+      expenses = JSON.parse(expensesJSON);
+      nextId = expenses.length > 0 ? Math.max(...expenses.map(e => e.id)) + 1 : 1;
+    }
+  }
+  loadExpensesFromLocalStorage();
   // ---- DOM refs ----
   const form = document.getElementById('expense-form');
   const descInput = document.getElementById('description');
