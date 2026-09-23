@@ -37,6 +37,7 @@
    if (activeCategory === 'All') {
     return expenses;
   }
+  return expenses.filter(expense => expense.category === activeCategory);
   }
   /**
    * TODO 2 — Given an array of expenses, return the sum of their
