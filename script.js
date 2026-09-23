@@ -18,8 +18,15 @@
   function loadExpensesFromLocalStorage() {
     const expensesJSON = localStorage.getItem('expenses');
     if (expensesJSON) {
-      expenses = JSON.parse(expensesJSON);
-      nextId = expenses.length > 0 ? Math.max(...expenses.map(e => e.id)) + 1 : 1;
+      try {
+        const parsed = JSON.parse(expensesJSON);
+        if (Array.isArray(parsed)) {
+          expenses = parsed;
+          nextId = expenses.length > 0 ? Math.max(...expenses.map(e => e.id)) + 1 : 1;
+        }
+      } catch {
+        // Saved data is broken — keep the sample expenses instead.
+      }
     }
   }
   loadExpensesFromLocalStorage();
