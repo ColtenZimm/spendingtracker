@@ -34,10 +34,10 @@
    * Practice: Array.prototype.filter
    */
   function getFilteredExpenses() {
-    // Replace this line:
+   if (activeCategory === 'All') {
     return expenses;
   }
-
+  }
   /**
    * TODO 2 — Given an array of expenses, return the sum of their
    * `amount` values as a single number.
@@ -45,8 +45,7 @@
    * Practice: Array.prototype.reduce
    */
   function calculateTotal(expenseList) {
-    // Replace this line:
-    return 0;
+    return expenseList.reduce((total, expense) => total + expense.amount, 0);
   }
 
   /**
@@ -68,8 +67,15 @@
    *   </li>
    */
   function buildExpenseListHTML(expenseList) {
-    // Replace this line:
-    return '';
+    return expenseList.map(({ id, description, amount, category }) => `
+      <li class="row cat-${category}" data-id="${id}">
+        <span class="dot"></span>
+        <span class="desc">${description}</span>
+        <span class="leader"></span>
+        <span class="amount">$${amount.toFixed(2)}</span>
+        <button class="delete-btn" data-id="${id}" aria-label="Delete">×</button>
+      </li>
+    `).join('');
   }
 
   // Re-renders the list + total from current state.
@@ -87,7 +93,15 @@
    * `nextId` so the next one doesn't collide.
    */
   function addExpense(description, amount, category) {
-    // Your code here
+    if (!description || Number.isNaN(amount) || amount <= 0) return;
+    const newExpense = {
+      id: nextId++,
+      description,
+      amount,
+      category
+    };
+    expenses.push(newExpense);
+    render();
   }
 
   /**
@@ -97,7 +111,8 @@
    * Practice: Array.prototype.filter
    */
   function deleteExpense(id) {
-    // Your code here
+    expenses = expenses.filter((expense) => expense.id !== id);
+    render();
   }
 
   // ---- Event wiring (done for you) ----
