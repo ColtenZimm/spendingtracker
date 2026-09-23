@@ -110,7 +110,7 @@ body {
   font-family: var(--font-sans);
   font-weight: 600;
   font-size: 14px;
-  color: #fff;
+  color: #797979;
   background: var(--accent);
   border: none;
   border-radius: 6px;
@@ -118,7 +118,7 @@ body {
   cursor: pointer;
 }
 
-.add-btn:hover { opacity: 0.9; }
+.add-btn:hover { opacity: 0.1; }
 
 .filter-bar {
   display: flex;
