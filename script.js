@@ -82,6 +82,8 @@
   // Re-renders the list + total from current state.
   // You don't need to touch this — it just calls the functions above.
   function render() {
+    const expensesJSON = JSON.stringify(expenses);
+    localStorage.setItem('expenses', expensesJSON);
     const filtered = getFilteredExpenses();
     listEl.innerHTML = buildExpenseListHTML(filtered);
     totalEl.textContent = '$' + calculateTotal(filtered).toFixed(2);
