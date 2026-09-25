@@ -64,15 +64,11 @@
       </div>
     </form>
 
-    <div class="filter-bar">
-      <button
-        v-for="category in ['All', ...categories]"
-        :key="category"
-        class="chip"
-        :class="{ active: activeCategory === category }"
-        @click="activeCategory = category"
-      >{{ category }}</button>
-    </div>
+    <category-filter
+    :categories="categories"
+    :selected="activeCategory"
+    @select="activeCategory = $event"
+    ></category-filter>
 
     <!-- transition-group animates rows as they're added and removed -->
     <transition-group tag="ul" name="row" class="list">

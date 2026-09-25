@@ -153,8 +153,31 @@ app.component('expense-row', {
       <button class="delete-btn" aria-label="Delete" @click="$emit('delete', expense.id)">×</button>
     </li>
   `,
+
+
   setup() {
     return { frequencies: FREQUENCIES, money: (n) => '$' + n.toFixed(2) };
   },
 });
+  app.component('category-filter', {
+    props: {
+      categories: {type: Array, required: true},
+      selected: {type: String, required: true},
+    },
+    emits: ['select'],
+    template: `
+      <div class="filter-bar">
+        <button
+          v-for="category in ['All', ...categories]"
+          :key="category"
+          class="chip"
+          :class="{ active: selected === category }"
+          @click="$emit('select', category)"
+        >
+          {{ category }}
+        </button>
+      </div>
+    `,
+});
+
 app.mount('#app');
