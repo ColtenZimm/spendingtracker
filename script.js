@@ -1,197 +1,160 @@
 // ============================================================
-// EXPENSE TRACKER — fill in the 5 TODOs below.
-// Everything else (DOM refs, event listeners) is wired up for you.
-// Open index.html in a browser and open the console to catch errors.
+// EXPENSE LEDGER — Vue 3 (Composition API, loaded from a CDN)
+//
+// The old version changed the page by hand: build an HTML string,
+// set innerHTML, update the totals, call render() after every change.
+// With Vue you only change the data. The template in index.html
+// describes what the page should look like for that data, and Vue
+// updates the page for you whenever the data changes.
 // ============================================================
 
-(function () {
-  'use strict';
+const { createApp, ref, reactive, computed, watch } = Vue;
 
-  // How often a payment happens. `suffix` is shown after the amount,
-  // `label` on the row's tag (one-time purchases get no tag).
-  const FREQUENCIES = {
-    once: { label: '', suffix: '' },
-    monthly: { label: 'Monthly', suffix: '/mo' },
-    yearly: { label: 'Yearly', suffix: '/yr' },
-  };
+const STORAGE_KEY = 'expenses';
 
-  // ---- State ----
-  let expenses = [
-    { id: 1, description: 'Coffee', amount: 4.5, category: 'Food', frequency: 'once' },
-    { id: 2, description: 'Bus pass', amount: 45, category: 'Transport', frequency: 'monthly' },
-    { id: 3, description: 'Netflix', amount: 15.99, category: 'Entertainment', frequency: 'monthly' },
-  ];
-  let nextId = 4;
-  let activeCategory = 'All';
-  function loadExpensesFromLocalStorage() {
-    const expensesJSON = localStorage.getItem('expenses');
-    if (expensesJSON) {
-      try {
-        const parsed = JSON.parse(expensesJSON);
-        if (Array.isArray(parsed)) {
-          // Expenses saved before frequencies existed count as one-time.
-          expenses = parsed.map((expense) => ({
-            ...expense,
-            frequency: Object.hasOwn(FREQUENCIES, expense.frequency) ? expense.frequency : 'once',
-          }));
-          nextId = expenses.length > 0 ? Math.max(...expenses.map(e => e.id)) + 1 : 1;
-        }
-      } catch {
-        // Saved data is broken — keep the sample expenses instead.
-      }
+const CATEGORIES = ['Food', 'Transport', 'Housing', 'Entertainment', 'Utilities', 'Other'];
+
+// How often a payment happens. `name` labels the toggle, `tag` labels the
+// row (one-time purchases get none) and `suffix` goes after the amount.
+const FREQUENCIES = {
+  once: { name: 'One-time', tag: '', suffix: '' },
+  monthly: { name: 'Monthly', tag: 'Monthly', suffix: '/mo' },
+  yearly: { name: 'Yearly', tag: 'Yearly', suffix: '/yr' },
+};
+
+const SAMPLE_EXPENSES = [
+  { id: 1, description: 'Coffee', amount: 4.5, category: 'Food', frequency: 'once' },
+  { id: 2, description: 'Bus pass', amount: 45, category: 'Transport', frequency: 'monthly' },
+  { id: 3, description: 'Netflix', amount: 15.99, category: 'Entertainment', frequency: 'monthly' },
+];
+
+function loadExpenses() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (!saved) return SAMPLE_EXPENSES;
+  try {
+    const parsed = JSON.parse(saved);
+    if (!Array.isArray(parsed)) return SAMPLE_EXPENSES;
+    // Expenses saved before frequencies existed count as one-time.
+    return parsed.map((expense) => ({
+      ...expense,
+      frequency: Object.hasOwn(FREQUENCIES, expense.frequency) ? expense.frequency : 'once',
+    }));
+  } catch {
+    // Saved data is broken — start from the samples instead.
+    return SAMPLE_EXPENSES;
+  }
+}
+
+function emptyDraft() {
+  return { description: '', amount: '', category: 'Food', frequency: 'once' };
+}
+
+const app =createApp({
+  setup() {
+    // ---- State ----
+    // ref() wraps a value so Vue notices when it changes.
+    // In script you read/write it through `.value`; the template unwraps it for you.
+    const expenses = ref(loadExpenses());
+    const activeCategory = ref('All');
+
+    // reactive() is the same idea for an object — no `.value` needed.
+    // v-model in the template keeps these fields in sync with the form inputs.
+    const draft = reactive(emptyDraft());
+
+    // Template ref: Vue fills this with the <input ref="descInput"> element.
+    const descInput = ref(null);
+
+    // ---- Derived values ----
+    // computed() recalculates only when something it reads changes.
+    // (These replace getFilteredExpenses() and the math in the old render().)
+    const filteredExpenses = computed(() =>
+      activeCategory.value === 'All'
+        ? expenses.value
+        : expenses.value.filter((expense) => expense.category === activeCategory.value)
+    );
+
+    const totals = computed(() => {
+      const sumFor = (frequency) =>
+        filteredExpenses.value
+          .filter((expense) => expense.frequency === frequency)
+          .reduce((total, expense) => total + expense.amount, 0);
+
+      const once = sumFor('once');
+      const monthly = sumFor('monthly');
+      const yearly = sumFor('yearly');
+      // One-time purchases count once; monthly payments happen 12 times a year.
+      return { once, monthly, yearly, perYear: once + monthly * 12 + yearly };
+    });
+
+    // ---- Saving ----
+    // watch() runs whenever `expenses` changes, including items pushed into it
+    // (that's what `deep: true` is for). No more remembering to call save.
+    watch(
+      expenses,
+      (list) => localStorage.setItem(STORAGE_KEY, JSON.stringify(list)),
+      { deep: true, immediate: true }
+    );
+
+    // ---- Actions ----
+    function addExpense() {
+      const description = draft.description.trim();
+      const amount = draft.amount;
+      if (!description || typeof amount !== 'number' || !(amount > 0)) return;
+
+      const nextId = Math.max(0, ...expenses.value.map((expense) => expense.id)) + 1;
+      expenses.value.push({
+        id: nextId,
+        description,
+        amount,
+        category: draft.category,
+        frequency: draft.frequency,
+      });
+
+      Object.assign(draft, emptyDraft());
+      descInput.value.focus();
     }
-  }
-  loadExpensesFromLocalStorage();
-  // ---- DOM refs ----
-  const form = document.getElementById('expense-form');
-  const descInput = document.getElementById('description');
-  const amountInput = document.getElementById('amount');
-  const categorySelect = document.getElementById('category');
-  const listEl = document.getElementById('expense-list');
-  const totalEl = document.getElementById('total');
-  const totalOnceEl = document.getElementById('total-once');
-  const totalMonthlyEl = document.getElementById('total-monthly');
-  const totalYearlyEl = document.getElementById('total-yearly');
-  const filterBar = document.getElementById('filter-bar');
-  const emptyState = document.getElementById('empty-state');
 
-  /**
-   * TODO 1 — Return a new array containing only the expenses whose
-   * `category` matches `activeCategory`. If activeCategory is 'All',
-   * return every expense.
-   *
-   * Practice: Array.prototype.filter
-   */
-  function getFilteredExpenses() {
-   if (activeCategory === 'All') {
-    return expenses;
-  }
-  return expenses.filter(expense => expense.category === activeCategory);
-  }
-  /**
-   * TODO 2 — Given an array of expenses, return the sum of their
-   * `amount` values as a single number.
-   *
-   * Practice: Array.prototype.reduce
-   */
-  function calculateTotal(expenseList) {
-    return expenseList.reduce((total, expense) => total + expense.amount, 0);
-  }
+    function deleteExpense(id) {
+      expenses.value = expenses.value.filter((expense) => expense.id !== id);
+    }
 
-  /**
-   * TODO 3 — Given an array of expenses, return one HTML string built
-   * from a template literal per item, joined together. Destructure each
-   * expense's fields (id, description, amount, category) rather than
-   * writing expense.id / expense.description everywhere.
-   *
-   * Practice: Array.prototype.map, destructuring, template literals
-   *
-   * Match this shape so the CSS and delete button work:
-   *
-   *   <li class="row cat-${category}" data-id="${id}">
-   *     <span class="dot"></span>
-   *     <span class="desc">${description}</span>
-   *     <span class="leader"></span>
-   *     <span class="amount">$${amount.toFixed(2)}</span>
-   *     <button class="delete-btn" data-id="${id}" aria-label="Delete">×</button>
-   *   </li>
-   */
-  function buildExpenseListHTML(expenseList) {
-    return expenseList.map(({ id, description, amount, category, frequency }) => {
-      const { label, suffix } = FREQUENCIES[frequency];
-      return `
-      <li class="row cat-${category}" data-id="${id}">
-        <span class="dot"></span>
-        <span class="desc">${description}</span>
-        ${label ? `<span class="freq-tag">${label}</span>` : ''}
-        <span class="leader"></span>
-        <span class="amount">$${amount.toFixed(2)}<span class="per">${suffix}</span></span>
-        <button class="delete-btn" data-id="${id}" aria-label="Delete">×</button>
-      </li>
-    `;
-    }).join('');
-  }
+    const money = (amount) => '$' + amount.toFixed(2);
 
-  // Re-renders the list + total from current state.
-  // You don't need to touch this — it just calls the functions above.
-  function render() {
-    const expensesJSON = JSON.stringify(expenses);
-    localStorage.setItem('expenses', expensesJSON);
-    const filtered = getFilteredExpenses();
-    listEl.innerHTML = buildExpenseListHTML(filtered);
-
-    const totalFor = (frequency) =>
-      calculateTotal(filtered.filter((expense) => expense.frequency === frequency));
-    const once = totalFor('once');
-    const monthly = totalFor('monthly');
-    const yearly = totalFor('yearly');
-
-    totalOnceEl.textContent = '$' + once.toFixed(2);
-    totalMonthlyEl.textContent = '$' + monthly.toFixed(2) + '/mo';
-    totalYearlyEl.textContent = '$' + yearly.toFixed(2) + '/yr';
-    // One-time purchases count once; monthly payments happen 12 times a year.
-    totalEl.textContent = '$' + (once + monthly * 12 + yearly).toFixed(2);
-    emptyState.hidden = filtered.length !== 0;
-  }
-
-  /**
-   * TODO 4 — Add a new expense object to the `expenses` array, then
-   * call render(). Give it a unique id using `nextId`, then increment
-   * `nextId` so the next one doesn't collide.
-   */
-  function addExpense(description, amount, category, frequency) {
-    if (!description || Number.isNaN(amount) || amount <= 0) return;
-    const newExpense = {
-      id: nextId++,
-      description,
-      amount,
-      category,
-      frequency
+    // Everything returned here can be used in the template.
+    return {
+      categories: CATEGORIES,
+      frequencies: FREQUENCIES,
+      activeCategory,
+      draft,
+      descInput,
+      filteredExpenses,
+      totals,
+      addExpense,
+      deleteExpense,
+      money,
     };
-    expenses.push(newExpense);
-    render();
-  }
+  },
+});
 
-  /**
-   * TODO 5 — Remove the expense whose id matches the given id from
-   * `expenses`, then call render().
-   *
-   * Practice: Array.prototype.filter
-   */
-  function deleteExpense(id) {
-    expenses = expenses.filter((expense) => expense.id !== id);
-    render();
-  }
-
-  // ---- Event wiring (done for you) ----
-
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const description = descInput.value.trim();
-    const amount = parseFloat(amountInput.value);
-    const category = categorySelect.value;
-    const frequency = form.elements.frequency.value;
-    if (!description || Number.isNaN(amount) || amount <= 0) return;
-    addExpense(description, amount, category, frequency);
-    form.reset();
-    descInput.focus();
-  });
-
-  // Event delegation: one listener on the list handles every delete
-  // button, including ones added after the page loaded.
-  listEl.addEventListener('click', (e) => {
-    const btn = e.target.closest('.delete-btn');
-    if (!btn) return;
-    deleteExpense(Number(btn.dataset.id));
-  });
-
-  filterBar.addEventListener('click', (e) => {
-    const chip = e.target.closest('.chip');
-    if (!chip) return;
-    activeCategory = chip.dataset.category;
-    [...filterBar.children].forEach((c) => c.classList.toggle('active', c === chip));
-    render();
-  });
-
-  render();
-})();
+app.component('expense-row', {
+  props: ['expense'],
+  emits: ['delete'],
+  template: `
+    <li class="row" :class="'cat-' + expense.category">
+      <span class="dot"></span>
+      <span class="desc">{{ expense.description }}</span>
+      <span v-if="frequencies[expense.frequency].tag" class="freq-tag">
+        {{ frequencies[expense.frequency].tag }}
+      </span>
+      <span class="leader"></span>
+      <span class="amount">
+        {{ money(expense.amount) }}<span class="per">{{ frequencies[expense.frequency].suffix }}</span>
+      </span>
+      <button class="delete-btn" aria-label="Delete" @click="$emit('delete', expense.id)">×</button>
+    </li>
+  `,
+  setup() {
+    return { frequencies: FREQUENCIES, money: (n) => '$' + n.toFixed(2) };
+  },
+});
+app.mount('#app');

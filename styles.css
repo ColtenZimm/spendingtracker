@@ -90,6 +90,9 @@
 
 * { box-sizing: border-box; }
 
+/* Hide the raw Vue template ({{ ... }}) until Vue has mounted */
+[v-cloak] { display: none; }
+
 ::selection { background: var(--blue); color: #fff; }
 
 body {
@@ -392,6 +395,20 @@ body {
 .row:nth-child(4) { animation-delay: 0.09s; }
 .row:nth-child(5) { animation-delay: 0.12s; }
 .row:nth-child(n + 6) { animation-delay: 0.15s; }
+
+/* Vue <transition-group name="row">: slide rows out when deleted or filtered away.
+   The entrance animation is switched off here so it doesn't pin opacity/transform. */
+.row-leave-active {
+  animation: none;
+  transition:
+    opacity 0.2s var(--ease),
+    transform 0.2s var(--ease);
+}
+
+.row-leave-to {
+  opacity: 0;
+  transform: translateX(16px);
+}
 
 /* Hairline divider between rows — hidden around the hovered row */
 .row { position: relative; }

@@ -11,71 +11,106 @@
 </head>
 <body>
 
-<main class="wrap">
+<!--
+  Everything inside #app is a Vue template. Vue reads it once, then keeps
+  the page in sync with the data in script.js:
+    {{ ... }}   prints a value (and escapes it, so typed HTML stays plain text)
+    v-model     two-way binds an input to a piece of data
+    v-for       repeats an element for each item in a list
+    v-if        only renders the element when the condition is true
+    :attr       sets an attribute from data  (short for v-bind:attr)
+    @event      runs code on an event        (short for v-on:event)
+  v-cloak hides the raw template until Vue has mounted.
+-->
+<main id="app" class="wrap" v-cloak>
   <div class="receipt">
     <header class="head">
       <h1>Expense Ledger</h1>
-      <p class="sub">practice: filter · reduce · map · destructuring</p>
+      <p class="sub">vue 3 · ref · computed · watch · v-for · v-model</p>
     </header>
 
-    <form id="expense-form" class="form">
-      <input id="description" type="text" placeholder="What did you buy?" autocomplete="off" required />
+    <form class="form" @submit.prevent="addExpense">
+      <input
+        id="description"
+        ref="descInput"
+        v-model="draft.description"
+        type="text"
+        placeholder="What did you buy?"
+        autocomplete="off"
+        required
+      />
+
       <div class="freq" role="radiogroup" aria-label="How often">
-        <label><input type="radio" name="frequency" value="once" checked /><span>One-time</span></label>
-        <label><input type="radio" name="frequency" value="monthly" /><span>Monthly</span></label>
-        <label><input type="radio" name="frequency" value="yearly" /><span>Yearly</span></label>
+        <label v-for="(info, key) in frequencies" :key="key">
+          <input type="radio" name="frequency" :value="key" v-model="draft.frequency" />
+          <span>{{ info.name }}</span>
+        </label>
       </div>
+
       <div class="form-row">
-        <input id="amount" type="number" step="0.01" min="0.01" placeholder="0.00" required />
-        <select id="category">
-          <option>Food</option>
-          <option>Transport</option>
-          <option>Housing</option>
-          <option>Entertainment</option>
-          <option>Utilities</option>
-          <option>Other</option>
+        <input
+          id="amount"
+          v-model.number="draft.amount"
+          type="number"
+          step="0.01"
+          min="0.01"
+          placeholder="0.00"
+          required
+        />
+        <select id="category" v-model="draft.category">
+          <option v-for="category in categories" :key="category">{{ category }}</option>
         </select>
         <button type="submit" class="add-btn">Add</button>
       </div>
     </form>
 
-    <div id="filter-bar" class="filter-bar">
-      <button class="chip active" data-category="All">All</button>
-      <button class="chip" data-category="Food">Food</button>
-      <button class="chip" data-category="Transport">Transport</button>
-      <button class="chip" data-category="Housing">Housing</button>
-      <button class="chip" data-category="Entertainment">Entertainment</button>
-      <button class="chip" data-category="Utilities">Utilities</button>
-      <button class="chip" data-category="Other">Other</button>
+    <div class="filter-bar">
+      <button
+        v-for="category in ['All', ...categories]"
+        :key="category"
+        class="chip"
+        :class="{ active: activeCategory === category }"
+        @click="activeCategory = category"
+      >{{ category }}</button>
     </div>
 
-    <ul id="expense-list" class="list"></ul>
-    <p id="empty-state" class="empty" hidden>No expenses in this category yet.</p>
+    <!-- transition-group animates rows as they're added and removed -->
+    <transition-group tag="ul" name="row" class="list">
+      <expense-row
+        v-for="expense in filteredExpenses"
+        :key="expense.id"
+        :expense="expense"
+        @delete="deleteExpense(expense.id)"
+      ></expense-row> 
+    </transition-group>
+
+    <p v-if="filteredExpenses.length === 0" class="empty">No expenses in this category yet.</p>
 
     <div class="breakdown">
       <div class="breakdown-cell">
         <span class="breakdown-label">One-time</span>
-        <span id="total-once" class="breakdown-value">$0.00</span>
+        <span class="breakdown-value">{{ money(totals.once) }}</span>
       </div>
       <div class="breakdown-cell">
         <span class="breakdown-label">Monthly</span>
-        <span id="total-monthly" class="breakdown-value">$0.00</span>
+        <span class="breakdown-value">{{ money(totals.monthly) }}/mo</span>
       </div>
       <div class="breakdown-cell">
         <span class="breakdown-label">Yearly</span>
-        <span id="total-yearly" class="breakdown-value">$0.00</span>
+        <span class="breakdown-value">{{ money(totals.yearly) }}/yr</span>
       </div>
     </div>
 
     <div class="total-row">
       <span>Est. yearly cost</span>
-      <span id="total" class="total-amount">$0.00</span>
+      <span class="total-amount">{{ money(totals.perYear) }}</span>
     </div>
   </div>
 
-  <p class="hint">Five TODOs are waiting in <code>script.js</code> — the app won't do anything until you fill them in.</p>
+  <p class="hint">Built with <code>Vue 3</code> · saved in your browser</p>
 </main>
 
+<script src="https://cdn.jsdelivr.net/npm/vue@3.5.43/dist/vue.global.prod.js"></script>
 <script src="script.js"></script>
 </body>
 </html>
