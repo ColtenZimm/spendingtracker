@@ -20,6 +20,11 @@
 
     <form id="expense-form" class="form">
       <input id="description" type="text" placeholder="What did you buy?" autocomplete="off" required />
+      <div class="freq" role="radiogroup" aria-label="How often">
+        <label><input type="radio" name="frequency" value="once" checked /><span>One-time</span></label>
+        <label><input type="radio" name="frequency" value="monthly" /><span>Monthly</span></label>
+        <label><input type="radio" name="frequency" value="yearly" /><span>Yearly</span></label>
+      </div>
       <div class="form-row">
         <input id="amount" type="number" step="0.01" min="0.01" placeholder="0.00" required />
         <select id="category">
@@ -47,8 +52,23 @@
     <ul id="expense-list" class="list"></ul>
     <p id="empty-state" class="empty" hidden>No expenses in this category yet.</p>
 
+    <div class="breakdown">
+      <div class="breakdown-cell">
+        <span class="breakdown-label">One-time</span>
+        <span id="total-once" class="breakdown-value">$0.00</span>
+      </div>
+      <div class="breakdown-cell">
+        <span class="breakdown-label">Monthly</span>
+        <span id="total-monthly" class="breakdown-value">$0.00</span>
+      </div>
+      <div class="breakdown-cell">
+        <span class="breakdown-label">Yearly</span>
+        <span id="total-yearly" class="breakdown-value">$0.00</span>
+      </div>
+    </div>
+
     <div class="total-row">
-      <span>Total</span>
+      <span>Est. yearly cost</span>
       <span id="total" class="total-amount">$0.00</span>
     </div>
   </div>

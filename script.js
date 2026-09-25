@@ -7,11 +7,19 @@
 (function () {
   'use strict';
 
+  // How often a payment happens. `suffix` is shown after the amount,
+  // `label` on the row's tag (one-time purchases get no tag).
+  const FREQUENCIES = {
+    once: { label: '', suffix: '' },
+    monthly: { label: 'Monthly', suffix: '/mo' },
+    yearly: { label: 'Yearly', suffix: '/yr' },
+  };
+
   // ---- State ----
   let expenses = [
-    { id: 1, description: 'Coffee', amount: 4.5, category: 'Food' },
-    { id: 2, description: 'Bus pass', amount: 45, category: 'Transport' },
-    { id: 3, description: 'Netflix', amount: 15.99, category: 'Entertainment' },
+    { id: 1, description: 'Coffee', amount: 4.5, category: 'Food', frequency: 'once' },
+    { id: 2, description: 'Bus pass', amount: 45, category: 'Transport', frequency: 'monthly' },
+    { id: 3, description: 'Netflix', amount: 15.99, category: 'Entertainment', frequency: 'monthly' },
   ];
   let nextId = 4;
   let activeCategory = 'All';
@@ -21,7 +29,11 @@
       try {
         const parsed = JSON.parse(expensesJSON);
         if (Array.isArray(parsed)) {
-          expenses = parsed;
+          // Expenses saved before frequencies existed count as one-time.
+          expenses = parsed.map((expense) => ({
+            ...expense,
+            frequency: Object.hasOwn(FREQUENCIES, expense.frequency) ? expense.frequency : 'once',
+          }));
           nextId = expenses.length > 0 ? Math.max(...expenses.map(e => e.id)) + 1 : 1;
         }
       } catch {
@@ -37,6 +49,9 @@
   const categorySelect = document.getElementById('category');
   const listEl = document.getElementById('expense-list');
   const totalEl = document.getElementById('total');
+  const totalOnceEl = document.getElementById('total-once');
+  const totalMonthlyEl = document.getElementById('total-monthly');
+  const totalYearlyEl = document.getElementById('total-yearly');
   const filterBar = document.getElementById('filter-bar');
   const emptyState = document.getElementById('empty-state');
 
@@ -82,15 +97,19 @@
    *   </li>
    */
   function buildExpenseListHTML(expenseList) {
-    return expenseList.map(({ id, description, amount, category }) => `
+    return expenseList.map(({ id, description, amount, category, frequency }) => {
+      const { label, suffix } = FREQUENCIES[frequency];
+      return `
       <li class="row cat-${category}" data-id="${id}">
         <span class="dot"></span>
         <span class="desc">${description}</span>
+        ${label ? `<span class="freq-tag">${label}</span>` : ''}
         <span class="leader"></span>
-        <span class="amount">$${amount.toFixed(2)}</span>
+        <span class="amount">$${amount.toFixed(2)}<span class="per">${suffix}</span></span>
         <button class="delete-btn" data-id="${id}" aria-label="Delete">×</button>
       </li>
-    `).join('');
+    `;
+    }).join('');
   }
 
   // Re-renders the list + total from current state.
@@ -100,7 +119,18 @@
     localStorage.setItem('expenses', expensesJSON);
     const filtered = getFilteredExpenses();
     listEl.innerHTML = buildExpenseListHTML(filtered);
-    totalEl.textContent = '$' + calculateTotal(filtered).toFixed(2);
+
+    const totalFor = (frequency) =>
+      calculateTotal(filtered.filter((expense) => expense.frequency === frequency));
+    const once = totalFor('once');
+    const monthly = totalFor('monthly');
+    const yearly = totalFor('yearly');
+
+    totalOnceEl.textContent = '$' + once.toFixed(2);
+    totalMonthlyEl.textContent = '$' + monthly.toFixed(2) + '/mo';
+    totalYearlyEl.textContent = '$' + yearly.toFixed(2) + '/yr';
+    // One-time purchases count once; monthly payments happen 12 times a year.
+    totalEl.textContent = '$' + (once + monthly * 12 + yearly).toFixed(2);
     emptyState.hidden = filtered.length !== 0;
   }
 
@@ -109,13 +139,14 @@
    * call render(). Give it a unique id using `nextId`, then increment
    * `nextId` so the next one doesn't collide.
    */
-  function addExpense(description, amount, category) {
+  function addExpense(description, amount, category, frequency) {
     if (!description || Number.isNaN(amount) || amount <= 0) return;
     const newExpense = {
       id: nextId++,
       description,
       amount,
-      category
+      category,
+      frequency
     };
     expenses.push(newExpense);
     render();
@@ -139,8 +170,9 @@
     const description = descInput.value.trim();
     const amount = parseFloat(amountInput.value);
     const category = categorySelect.value;
+    const frequency = form.elements.frequency.value;
     if (!description || Number.isNaN(amount) || amount <= 0) return;
-    addExpense(description, amount, category);
+    addExpense(description, amount, category, frequency);
     form.reset();
     descInput.focus();
   });

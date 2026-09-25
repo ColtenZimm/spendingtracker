@@ -198,6 +198,59 @@ body {
 
 #description { width: 100%; margin-bottom: 10px; }
 
+/* One-time / Monthly / Yearly toggle */
+.freq {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  margin-bottom: 10px;
+  background: var(--field);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.freq label {
+  flex: 1;
+  position: relative;
+}
+
+/* Hide the radio circle but keep it keyboard-focusable */
+.freq input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+}
+
+.freq span {
+  display: block;
+  padding: 8px 6px;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+  color: var(--ink-soft);
+  border-radius: 9px;
+  cursor: pointer;
+  user-select: none;
+  transition:
+    color 0.2s var(--ease),
+    background-color 0.2s var(--ease),
+    box-shadow 0.2s var(--ease);
+}
+
+.freq span:hover { color: var(--blue); }
+
+.freq input:checked + span {
+  color: #fff;
+  background: var(--blue);
+  box-shadow: 0 4px 12px -4px var(--blue);
+}
+
+.freq input:focus-visible + span {
+  box-shadow: 0 0 0 3px var(--blue-ring);
+}
+
 .form-row {
   display: flex;
   gap: 10px;
@@ -386,6 +439,18 @@ body {
   font-weight: 500;
 }
 
+/* "Monthly" / "Yearly" tag on recurring rows */
+.freq-tag {
+  flex: 0 0 auto;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--blue);
+  background: var(--blue-soft);
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
 .leader {
   flex: 1;
   height: 1px;
@@ -401,6 +466,14 @@ body {
   font-weight: 600;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
+}
+
+/* "/mo" or "/yr" after a recurring amount */
+.per {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ink-faint);
+  margin-left: 1px;
 }
 
 .delete-btn {
@@ -454,13 +527,48 @@ body {
   border-radius: var(--radius-sm);
 }
 
-/* ---- Total ---- */
+/* ---- Totals ---- */
+
+.breakdown {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.breakdown-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  background: var(--field);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.breakdown-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.breakdown-value {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
 .total-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 18px;
+  margin-top: 8px;
   padding: 18px 20px;
   border-radius: 16px;
   background: var(--panel);
@@ -535,6 +643,17 @@ body {
   #amount { flex: 0 0 40%; width: auto; min-width: 0; }
   #category { flex: 1 1 0; }
   .add-btn { flex: 1 1 100%; }
+
+  /* The /mo or /yr after the amount is enough here — give the name the room */
+  .freq-tag { display: none; }
+
+  /* Stack the totals as label-left, value-right rows */
+  .breakdown { grid-template-columns: 1fr; gap: 6px; }
+  .breakdown-cell {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
 
   .total-amount { font-size: 20px; }
 }
